@@ -13,4 +13,5 @@ spark-submit --class \<Main Class\> --master local[4] target/task2-\<version\>.j
 #### Main Classes
 
 * org.andrew.task2.sample.S3Stream
+* org.andrew.task2.sample.StructuredStream
 * org.andrew.task2.group1.Question1
