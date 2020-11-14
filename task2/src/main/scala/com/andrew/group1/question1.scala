@@ -99,7 +99,7 @@ object Question1 {
     val airports = rows.select($"Origin", $"Dest")
     airports.printSchema()
 
-    val flights = airports.flatMap(row => Seq((row.getString(0), 1), (row.getString(1), 1))).groupBy("_1").sum("_2")
+    val flights = airports.flatMap(row => Seq((row.getString(0), 1), (row.getString(1), 1))).groupBy("_1").sum("_2").sort($"_1".desc).limit(10)
     flights.printSchema()
 
     val query = flights.writeStream.outputMode("complete").format("console").start()
