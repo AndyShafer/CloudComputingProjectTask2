@@ -5,11 +5,6 @@ import org.apache.spark.streaming._
 import org.apache.spark.streaming.StreamingContext._
 import org.apache.spark.sql._
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.expressions.Window
-
-//import java.time.LocalDateTime
-//import java.sql.Timestamp
 
 object Question1 {
   def main(args: Array[String]): Unit = {
@@ -97,25 +92,21 @@ object Question1 {
 
     import spark.implicits._
 
-    val rows = spark.readStream.option("header", "true").schema(onTimeSchema).csv("s3://transportation-databases/streaming_data")
+    val rows = spark.readStream.option("header", "true").schema(onTimeSchema).csv("s3://transportation-databases/airline_ontime")
 
     val selection = rows.select($"Origin", $"Carrier", $"DepDelay", $"Year", $"Month", $"DayOfMonth")
       .filter(row => row.getAs("DepDelay") != null)
 
-    val onTime = selection.map(row => (row.getString(0), row.getString(1), if(row.getString(2).toFloat >= 0) 1 else 0, 1/*,
-      Timestamp.valueOf(LocalDateTime.of(row.getString(3).toInt, row.getString(4).toInt, row.getString(5).toInt, 0, 0, 0))*/))
-        .groupBy($"_1".as("airport"), $"_2".as("carrier")/*, window($"_5", "1 day")*/).sum("_3", "_4")
+    val onTime = selection.map(row => (row.getString(0), row.getString(1), if(row.getString(2).toFloat >= 0) 1 else 0, 1))
+        .groupBy($"_1".as("airport"), $"_2".as("carrier")).sum("_3", "_4")
     onTime.printSchema()
 
-    val performance = onTime.select($"airport", $"carrier", ($"sum(_3)" / $"sum(_4)").as("performance")/*, $"window"*/)
+    val performance = onTime.select($"airport", $"carrier", ($"sum(_3)" / $"sum(_4)").as("performance"))
       .sort($"airport", $"performance".desc)
     performance.printSchema()
     
-    //val windowSpec = Window.partitionBy($"airport").orderBy($"performance".desc)
-    //val rankedPerformance = performance.withColumn("rank", rank().over(windowSpec))
-
-    //val query = performance.writeStream.outputMode("complete").format("console").start()
     val query = performance.writeStream.outputMode("complete").foreach(new Question1Writer).start()
+    //val query = performance.writeStream.outputMode("complete").format("console").start()
     query.awaitTermination()
   }
 }
