@@ -6,9 +6,9 @@ import org.apache.spark.streaming.StreamingContext._
 import org.apache.spark.sql._
 import org.apache.spark.sql.types._
 
-object Question1 {
+object Question2 {
   def main(args: Array[String]): Unit = {
-    val appName = "Question1"
+    val appName = "Question2"
     val onTimeSchema = new StructType()
       .add("Year", StringType)
       .add("Quarter", StringType)
@@ -94,16 +94,16 @@ object Question1 {
 
     val rows = spark.readStream.option("header", "true").schema(onTimeSchema).csv("s3://transportation-databases/airline_ontime")
 
-    val selection = rows.select($"Origin", $"Carrier", $"DepDelay", $"Year", $"Month", $"DayOfMonth")
+    val selection = rows.select($"Origin", $"Dest", $"DepDelay")
       .filter(row => row.getAs("DepDelay") != null)
 
     val onTime = selection.map(row => (row.getString(0), row.getString(1), if(row.getString(2).toFloat >= 0) 1 else 0, 1))
-        .groupBy($"_1".as("airport"), $"_2".as("carrier")).sum("_3", "_4")
+        .groupBy($"_1".as("airport"), $"_2".as("dest")).sum("_3", "_4")
 
-    val performance = onTime.select($"airport", $"carrier", ($"sum(_3)" / $"sum(_4)").as("performance"))
+    val performance = onTime.select($"airport", $"dest", ($"sum(_3)" / $"sum(_4)").as("performance"))
       .sort($"airport", $"performance".desc)
     
-    val query = performance.writeStream.outputMode("complete").foreach(new Question1Writer).start()
+    val query = performance.writeStream.outputMode("complete").foreach(new Question2Writer).start()
     query.awaitTermination()
   }
 }

@@ -17,3 +17,4 @@ spark-submit --class \<Main Class\> --master local[4] target/task2-\<version\>.j
 * org.andrew.task2.group1.Question1
 * org.andrew.task2.group1.Question2
 * org.andrew.task2.group2.Question1
+* org.andrew.task2.group2.Question2
