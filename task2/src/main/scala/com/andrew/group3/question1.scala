@@ -51,10 +51,8 @@ object Question1 {
     val rows = spark.readStream.option("header", "true").schema(airCarrierSchema).csv("s3://transportation-databases/air_carrier_statistics_ALL")
 
     val selection = rows.select($"ORIGIN", $"DEST", $"PASSENGERS")
-    selection.printSchema()
 
     val flights = selection.flatMap(row => Seq((row.getString(0), row.getString(2).toDouble.toLong, (row.getString(1), row.getString(2).toDouble.toLong)))).groupBy("_1").sum("_2").sort($"sum(_2)".desc)
-    flights.printSchema()
 
     val query = flights.writeStream.outputMode("complete").format("console").start()
 
