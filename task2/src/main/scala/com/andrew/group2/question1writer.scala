@@ -19,7 +19,7 @@ class Question1Writer extends ForeachWriter[Row] {
 
   // This will lazily be initialized only when open() is called
   lazy val ddb = AmazonDynamoDBClientBuilder.standard()
-    .withCredentials(new ProfileCredentialsProvider())
+    .withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
     .withRegion(regionName)
     .build()
 

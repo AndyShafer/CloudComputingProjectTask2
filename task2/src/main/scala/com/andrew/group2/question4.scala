@@ -93,7 +93,7 @@ object Question4 {
 
     import spark.implicits._
 
-    val rows = spark.readStream.option("header", "true").schema(onTimeSchema).csv("s3://transportation-databases/airline_ontime")
+    val rows = spark.readStream.option("header", "true").schema(onTimeSchema).csv("s3://transportation-databases/streaming_data")
 
     val selection = rows.select($"Origin", $"Dest", $"DepDelay".cast(DoubleType))
       .filter(row => row.getAs("DepDelay") != null)
