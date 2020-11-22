@@ -38,35 +38,18 @@ class Question4Writer extends ForeachWriter[Row] {
     true
   }
 
-  def writeBatch() = {
-    val itemsMap = Map(tableName ->
-      items.map(i => new WriteRequest(new PutRequest(i))).asJava).asJava
-    val batchRequest = new BatchWriteItemRequest(itemsMap)
-    ddb.batchWriteItem(batchRequest)
-    items = Seq()
-    println("Batch written")
-  }
-  
   def process(row: Row) = {
     val rowAsMap = row.getValuesMap(row.schema.fieldNames)
     val dynamoItem = rowAsMap.mapValues {
       v: Any => new AttributeValue(v.toString)
     }.asJava
-
-    items = items :+ dynamoItem
-    if(items.size >= batchSize) {
-      writeBatch()
-    }
+    ddb.putItem(tableName, dynamoItem)
   }
 
   //
   // This is called after all the rows have been processed.
   //
   def close(errorOrNull: Throwable) = {
-    if(items.size != 0) {
-      writeBatch()
-    }
-    println("done!")
     ddb.shutdown()
   }
 }
