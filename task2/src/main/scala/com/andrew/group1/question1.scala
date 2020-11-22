@@ -87,7 +87,13 @@ object Question1 {
       .add("Div2TailNum", StringType)
       .add("", StringType)
      
-    //val sparkConf = new SparkConf().setAppName(appName)
+    val sparkConf = new SparkConf().setAppName(appName)
+      .set("spark.shuffle.service.enabled", "false")
+      .set("spark.dynamicAllocation.enabled", "true")
+      //.set("spark.cores.max", "1")
+      //.set("spark.executor.instances","2")
+      //.set("spark.executor.memory","200m")
+      //.set("spark.executor.cores","1")
     //val ssc = new StreamingContext(sparkConf, Seconds(10))
     val spark = SparkSession.builder().appName(appName).getOrCreate()
     spark.sparkContext.setLogLevel("WARN")
@@ -100,8 +106,11 @@ object Question1 {
 
     val flights = airports.flatMap(row => Seq((row.getString(0), 1), (row.getString(1), 1))).groupBy("_1").sum("_2").sort($"_1".desc).limit(10)
 
-    val query = flights.writeStream.outputMode("complete").format("console").start()
-
+    val query = flights.writeStream.outputMode("complete").foreachBatch { (batchDF: DataFrame, batchId: Long) =>
+      batchDF.persist()
+      batchDF.write.mode(SaveMode.Overwrite).option("header", "true").csv("s3://transportation-databases/output/2_1_1")
+      batchDF.unpersist()
+    }.start()
     query.awaitTermination()
   }
 }

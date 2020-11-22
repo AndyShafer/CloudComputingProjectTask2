@@ -8,7 +8,7 @@ mvn clean package
 
 ### How to Run
 
-spark-submit --class \<Main Class\> --master yarn target/task2-\<version\>.jar args...
+spark-submit --class \<Main Class\> --master local[4] target/task2-\<version\>.jar args...
 
 #### Main Classes
 

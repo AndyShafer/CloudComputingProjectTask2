@@ -99,8 +99,11 @@ object Question2 {
     val onTime = selection.flatMap(row => Seq((row.getString(0), if(row.getString(1).toFloat >= 0) 1 else 0, 1))).groupBy("_1").sum("_2", "_3")
     val performance = onTime.map(row => (row.getString(0), row.getLong(1).toFloat / row.getLong(2))).sort($"_2".desc).limit(10)
 
-    val query = performance.writeStream.outputMode("complete").format("console").start()
-
+    val query = performance.writeStream.outputMode("complete").foreachBatch { (batchDF, batchId: Long) =>
+      batchDF.persist()
+      batchDF.write.mode(SaveMode.Overwrite).option("header", "true").csv("s3://transportation-databases/output/2_1_2")
+      batchDF.unpersist()
+    }.start()
     query.awaitTermination()
   }
 }
