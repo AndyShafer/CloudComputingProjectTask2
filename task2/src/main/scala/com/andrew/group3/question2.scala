@@ -105,15 +105,14 @@ object Question2 {
 
     val selection = rows.select($"Carrier", $"Origin", $"Dest", $"ArrDelay", $"FlightDate", $"DepTime").filter(row => row.getAs("ArrDelay") != null)
 
-    val cityA = selection.select($"Carrier".as("carrier1"), $"Origin".as("airport_a"), $"Dest".as("airport_b1"), $"ArrDelay".cast(LongType).as("delay_1"), $"FlightDate".cast(DateType).as("start_date1"), $"DepTime".as("dep_time1")).filter($"dep_time1".cast(LongType) < 1200)
+    val cityA = selection.select($"Carrier".as("carrier1"), $"Origin".as("airport_a"), $"Dest".as("airport_b1"), $"ArrDelay".cast(LongType).as("delay_1"), $"FlightDate".cast(DateType).as("start_date1"), $"DepTime".as("dep_time1")).filter($"dep_time1".cast(LongType) < 1200).filter(row => row.getAs("airport_a") == startAirport && row.getAs("airport_b1") == intermediateAirport)
 
-    val cityB = selection.select($"Carrier".as("carrier2"), $"Origin".as("airport_b2"), $"Dest".as("airport_c"), $"ArrDelay".cast(LongType).as("delay_2"), date_sub($"FlightDate".cast(DateType), 2).as("start_date2"), $"DepTime".as("dep_time2")).filter($"dep_time2".cast(LongType) > 1200)
+    val cityB = selection.select($"Carrier".as("carrier2"), $"Origin".as("airport_b2"), $"Dest".as("airport_c"), $"ArrDelay".cast(LongType).as("delay_2"), date_sub($"FlightDate".cast(DateType), 2).as("start_date2"), $"DepTime".as("dep_time2")).filter($"dep_time2".cast(LongType) > 1200).filter(row => row.getAs("airport_b2") == intermediateAirport && row.getAs("airport_c") == endAirport)
 
     val trip = cityA.join(cityB, $"airport_b1" === $"airport_b2" && $"start_date1" === $"start_date2")
-      .filter(row => row.getAs("airport_a") == startAirport && row.getAs("airport_b1") == intermediateAirport && row.getAs("airport_c") == endAirport)
       .select(concat($"airport_a", lit(","), $"airport_b1", lit(","), $"airport_c", lit(","), $"start_date1").as("trip"), ($"delay_1" + $"delay_2").as("total_delay"), $"carrier1", $"dep_time1", $"carrier2", $"dep_time2")
 
-    val query = trip.writeStream.foreach(new Question2Writer)start()
+    val query = trip.writeStream.foreach(new Question2Writer).start()
     query.awaitTermination()
   }
 }
