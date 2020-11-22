@@ -88,13 +88,6 @@ object Question1 {
       .add("", StringType)
      
     val sparkConf = new SparkConf().setAppName(appName)
-      .set("spark.shuffle.service.enabled", "false")
-      .set("spark.dynamicAllocation.enabled", "true")
-      //.set("spark.cores.max", "1")
-      //.set("spark.executor.instances","2")
-      //.set("spark.executor.memory","200m")
-      //.set("spark.executor.cores","1")
-    //val ssc = new StreamingContext(sparkConf, Seconds(10))
     val spark = SparkSession.builder().appName(appName).getOrCreate()
     spark.sparkContext.setLogLevel("WARN")
 
